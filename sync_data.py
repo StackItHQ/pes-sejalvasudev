@@ -12,6 +12,15 @@ sheet = service.spreadsheets()
 SPREADSHEET_ID = '1oFDdIz-zg1gZ5tGVO3Mesjqn39nT_ouWiYf4l_toqCI'
 CRUD_RANGE_NAME = 'Sheet1!A1:E'
 
+def clear_sheet(spreadsheet_id, range_name):
+    # Clear the content in the specified range
+    body = {}
+    service.spreadsheets().values().clear(
+        spreadsheetId=spreadsheet_id,
+        range=range_name,
+        body=body
+    ).execute()
+
 def read_data(spreadsheet_id, range_name):
     result = sheet.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
     return result.get('values', [])
@@ -28,7 +37,6 @@ def write_data(spreadsheet_id, range_name, values):
     ).execute()
     return result
 
-
 def sync_data():
     # Read data from Google Sheets
     sheet_data = read_data(SPREADSHEET_ID, CRUD_RANGE_NAME)
@@ -40,9 +48,12 @@ def sync_data():
             database.create_data([values])  # Adjust this based on your database function
 
     # Read data from database
-    db_data = database.read_all_data()  # Adjust this based on your database function
+    db_data = database.read_all_data()
 
-    # Write data back to Google Sheets if needed
+    # Clear existing data in Google Sheet
+    clear_sheet(SPREADSHEET_ID, CRUD_RANGE_NAME)
+
+    # Write data back to Google Sheets
     write_data(SPREADSHEET_ID, CRUD_RANGE_NAME, db_data)
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+# database.py
 import mysql.connector
 
 def get_db_connection():
@@ -12,8 +13,7 @@ def get_db_connection():
 def create_data(values):
     connection = get_db_connection()
     cursor = connection.cursor()
-    query = "INSERT INTO data (name, age, university, course) VALUES (%s, %s, %s, %s)"
-    cursor.executemany(query, values)
+    cursor.executemany("INSERT INTO data (name, age, university, course) VALUES (%s, %s, %s, %s)", values)
     connection.commit()
     cursor.close()
     connection.close()
@@ -21,8 +21,7 @@ def create_data(values):
 def read_all_data():
     connection = get_db_connection()
     cursor = connection.cursor()
-    query = "SELECT * FROM data"
-    cursor.execute(query)
+    cursor.execute("SELECT * FROM data")
     result = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -31,8 +30,7 @@ def read_all_data():
 def update_data(id, values):
     connection = get_db_connection()
     cursor = connection.cursor()
-    query = "UPDATE data SET name = %s, age = %s, university = %s, course = %s WHERE id = %s"
-    cursor.execute(query, (*values, id))
+    cursor.execute("UPDATE data SET name=%s, age=%s, university=%s, course=%s WHERE id=%s", (*values, id))
     connection.commit()
     cursor.close()
     connection.close()
@@ -40,8 +38,7 @@ def update_data(id, values):
 def delete_data(id):
     connection = get_db_connection()
     cursor = connection.cursor()
-    query = "DELETE FROM data WHERE id = %s"
-    cursor.execute(query, (id,))
+    cursor.execute("DELETE FROM data WHERE id=%s", (id,))
     connection.commit()
     cursor.close()
     connection.close()
