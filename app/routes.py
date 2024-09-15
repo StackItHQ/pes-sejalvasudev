@@ -1,14 +1,14 @@
-# app/routes.py
 from fastapi import APIRouter, HTTPException, File, UploadFile, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates  # Import Jinja2Templates directly here
-from app.models import Item
-from app.crud import create_item, get_items, update_item, delete_item
 import pandas as pd
 import io
+from app.logging_config import setup_logging  # Import logging setup
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 from typing import List
+
+# Initialize logging
+logger = setup_logging()
 
 # Initialize Google Sheets API
 creds = service_account.Credentials.from_service_account_file('credentials.json')
@@ -27,43 +27,28 @@ def write_to_google_sheets(values):
 router = APIRouter()
 
 # Initialize the Jinja2 templates inside the router directly
+from fastapi.templating import Jinja2Templates
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
-# The rest of the routes...
-
-@router.post("/items/")
-async def create_item_route(item: Item):
-    item_id = await create_item(item)
-    return {"item_id": str(item_id)}
-
-@router.get("/items/")
-async def get_items_route():
-    items = await get_items()
-    return items
-
-@router.put("/items/{item_id}")
-async def update_item_route(item_id: str, item: Item):
-    updated_count = await update_item(item_id, item)
-    if updated_count == 0:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return {"updated_count": updated_count}
-
-@router.delete("/items/{item_id}")
-async def delete_item_route(item_id: str):
-    deleted_count = await delete_item(item_id)
-    if deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return {"deleted_count": deleted_count}
-
 @router.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
-    contents = await file.read()
-    df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
-    return {"filename": file.filename, "columns": df.columns.tolist(), "data": df.head().to_dict()}
+    try:
+        contents = await file.read()
+        df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
+        logger.info("CSV Data Loaded Successfully")
+        logger.info(f"DataFrame head:\n{df.head()}")
+
+        data = df.head().to_dict(orient='records')
+        columns = df.columns.tolist()
+
+        return {"filename": file.filename, "columns": columns, "data": data}
+    except Exception as e:
+        logger.error(f"Error processing file: {e}")
+        return {"error": str(e)}
 
 @router.post("/import-to-sheets/")
 async def import_to_sheets(data: List[List[str]]):
