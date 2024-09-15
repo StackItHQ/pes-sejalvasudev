@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Upload Your CSV File</h2>
+    <div class="upload-section">
+        <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" id="file-input">
+            <button type="submit">Upload</button>
+        </form>
+        <div id="result"></div> <!-- Add this to display the results -->
+    </div>
+</div>
+
+<script>
+document.getElementById('upload-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+    });
+    const result = await response.json();
+    const resultDiv = document.getElementById('result');
+
+    // Clear previous results
+    resultDiv.innerHTML = '';
+
+    if (result.columns && result.data) {
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+        const headerRow = document.createElement('tr');
+
+        result.columns.forEach(col => {
+            const th = document.createElement('th');
+            th.innerText = col;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+
+        result.data.forEach(row => {
+            const tr = document.createElement('tr');
+            result.columns.forEach(col => {
+                const td = document.createElement('td');
+                td.innerText = row[col] || '';
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        resultDiv.appendChild(table);
+    } else {
+        resultDiv.innerText = 'Failed to process CSV file.';
+    }
+});
+</script>
+{% endblock %}
