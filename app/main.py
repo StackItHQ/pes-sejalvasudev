@@ -1,10 +1,11 @@
-# app/main.py
 from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from app.db import db
+from app.routes import router
 from typing import List
+from app.template_setup import templates  # Import from template_setup
 
 app = FastAPI()
 
@@ -12,11 +13,13 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Serve HTML templates
-templates = Jinja2Templates(directory="app/templates")
+# templates = Jinja2Templates(directory="app/templates")  # Removed this line
 
-# Example route for homepage
+# Include the routes
+app.include_router(router)
+
 @app.get("/")
-def read_root(request: Request):
+async def read_root(request: Request):
     return templates.TemplateResponse("base.html", {"request": request})
 
 @app.on_event("startup")

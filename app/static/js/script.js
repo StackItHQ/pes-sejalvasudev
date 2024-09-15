@@ -14,4 +14,17 @@ document.addEventListener("DOMContentLoaded", function() {
           .then(data => console.log(data))
           .catch(error => console.error(error));
     });
+
+    // New async event listener for 'uploadForm'
+    document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        
+        const response = await fetch('/upload/', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        console.log(result);
+    });
 });
